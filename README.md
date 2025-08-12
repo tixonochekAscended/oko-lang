@@ -163,6 +163,35 @@ io::println("msg");
 ```
 It's that simple.
 
+At last, here's how you can create your own functions. You need to use the `funct` keyword to do so. Here are some code examples:
+```oko
+import io;
+
+funct sum(a, b) {
+  return a + b;
+}
+
+funct thisReturnsNil(msg) {
+  io::println(msg);
+}
+```
+If a function doesn't feature a `return` statement, it returns `Nil` - which by the way doesn't have its own specific keyword. The easiest way to get Nil is by using `tu::getNil()` module method.
+You also are allowed to nest function definitions:
+```oko
+import io;
+
+funct outer(a, b) {
+  funct inner(a, b, c) {
+    return a + b + c;
+  }
+
+  return inner(a, b, 5);
+}
+
+io::println(outer(2, 3));
+```
+This outputs `10`.
+
 ## 📖 Naming
 The name `oko-lang` (or rather `oko`) was chosen for no specific reason by me, tixonochek. Whether it was the best possible choice at the time or not, the name `oko` allowed me to create a fitting logotype and slogan for the language.
 
