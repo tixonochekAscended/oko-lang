@@ -28,40 +28,49 @@ export const valTypes = {
 
 const loadedMods = {};
 
+/* ---------- helper: deep-ish clone for our Value objects ---------- */
+
+function cloneValue(val) {
+    if (val == null) return { type: valTypes.Nil, value: null };
+
+    if (val.arguments !== undefined && val.body !== undefined) {
+        return { arguments: val.arguments.slice(), body: val.body };
+    }
+
+    switch (val.type) {
+        case valTypes.Number:
+        case valTypes.String:
+        case valTypes.Nil:
+            return { type: val.type, value: val.value };
+        case valTypes.Array:
+            return {
+                type: valTypes.Array,
+                value: val.value.map(el => cloneValue(el))
+            };
+        default:
+            return { ...val };
+    }
+}
+
+/* ---------------- operator implementations (unchanged logic) ---------------- */
+
 export const opFunctions = {
     "+": (left, right) => {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: left.value + right.value
-            }
+            return { type: valTypes.Number, value: left.value + right.value }
         }
-
         if (left.type == valTypes.String && right.type == valTypes.String) {
-            return {
-                type: valTypes.String,
-                value: left.value + right.value
-            }
+            return { type: valTypes.String, value: left.value + right.value }
         }
-
         if (left.type == valTypes.String && right.type == valTypes.Number) {
-            return {
-                type: valTypes.String,
-                value: left.value + right.value
-            }
+            return { type: valTypes.String, value: left.value + right.value }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.String) {
-            return {
-                type: valTypes.String,
-                value: left.value + right.value
-            }
+            return { type: valTypes.String, value: left.value + right.value }
         }
-
         error(17, [ "+" ]);
     },
 
@@ -69,14 +78,9 @@ export const opFunctions = {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: left.value - right.value
-            }
+            return { type: valTypes.Number, value: left.value - right.value }
         }
-
         error(17, [ "-" ]);
     },
 
@@ -84,28 +88,15 @@ export const opFunctions = {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: left.value * right.value
-            }
+            return { type: valTypes.Number, value: left.value * right.value }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.String) {
-            return {
-                type: valTypes.String,
-                value: right.value.repeat(left.value)
-            }
+            return { type: valTypes.String, value: right.value.repeat(left.value) }
         }
-
         if (left.type == valTypes.String && right.type == valTypes.Number) {
-            return {
-                type: valTypes.String,
-                value: left.value.repeat(right.value)
-            }
+            return { type: valTypes.String, value: left.value.repeat(right.value) }
         }
-
         error(17, [ "*" ]);
     },
 
@@ -113,14 +104,9 @@ export const opFunctions = {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: left.value / right.value
-            }
+            return { type: valTypes.Number, value: left.value / right.value }
         }
-
         error(17, [ "/" ]);
     },
 
@@ -128,14 +114,9 @@ export const opFunctions = {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: Math.pow(left.value, right.value)
-            }
+            return { type: valTypes.Number, value: Math.pow(left.value, right.value) }
         }
-
         error(17, [ "^" ]);
     },
 
@@ -143,14 +124,9 @@ export const opFunctions = {
         if (left.type == valTypes.Nil || right.type == valTypes.Nil) {
             return { type: valTypes.Nil, value: null }
         }
-
         if (left.type == valTypes.Number && right.type == valTypes.Number) {
-            return {
-                type: valTypes.Number,
-                value: left.value % right.value
-            }
+            return { type: valTypes.Number, value: left.value % right.value }
         }
-
         error(17, [ "%" ]);
     },
 
@@ -274,7 +250,9 @@ export const opFunctionsUnary = {
 
         error(17, [ "!" ]);
     }
-}
+};
+
+/* ---------------- node handlers ---------------- */
 
 const nodeFunctions = {
     "VariableAssign": (ctx, node) => {
@@ -286,10 +264,7 @@ const nodeFunctions = {
 
         switch (assignOp) {
             case ":=":
-                ctx.scopes[ctx.curScope][varName] = {
-                    type: varValue.type,
-                    value: varValue.value
-                };
+                ctx.scopes[ctx.curScope][varName] = cloneValue(varValue);
                 break;
 
             case "=": {
@@ -303,10 +278,7 @@ const nodeFunctions = {
                     error(15, [ "=" ]);
                 }
 
-                ctx.scopes[posVar.originScope][varName] = {
-                    type: varValue.type,
-                    value: varValue.value
-                };
+                ctx.scopes[posVar.originScope][varName] = cloneValue(varValue);
                 break;
             }
 
@@ -325,7 +297,7 @@ const nodeFunctions = {
                     error(15, [ fstChar + "=" ]);
                 }
 
-                ctx.scopes[posVar.originScope][varName] = opFunctions[fstChar](posVar, varValue);
+                ctx.scopes[posVar.originScope][varName] = cloneValue(opFunctions[fstChar](posVar, varValue));
                 break;
             }
         }
@@ -338,10 +310,7 @@ const nodeFunctions = {
         const funcArgs = node.arguments;
         const funcBody = node.body;
 
-        ctx.scopes[ctx.curScope][funcName] = {
-            arguments: funcArgs,
-            body: funcBody
-        };
+        ctx.scopes[ctx.curScope][funcName] = { arguments: funcArgs, body: funcBody };
 
         return ctx;
     },
@@ -352,13 +321,14 @@ const nodeFunctions = {
         }
 
         ctx.stop = true;
-        ctx.returnVal = evalExpr(ctx, node.value);
+        ctx.returnVal = cloneValue(evalExpr(ctx, node.value));
 
         return ctx;
     },
 
     "ExprStat": (ctx, node) => {
         evalExpr(ctx, node.expression);
+        return ctx;
     },
 
     "IfStat": (ctx, node) => {
@@ -369,7 +339,7 @@ const nodeFunctions = {
         if (!(mainCond.value === null || mainCond.value === 0 || mainCond.value === "" || mainCond.value.length === 0)) {
             executeFunction(ctx, mainBody);
             shouldElse = false;
-            return;
+            return ctx;
         }
 
         node.elifs.some(elif => {
@@ -387,8 +357,10 @@ const nodeFunctions = {
 
         if (node.else && shouldElse) {
             executeFunction(ctx, node.else);
-            return;
+            return ctx;
         }
+
+        return ctx;
     },
 
     "ImportStat": (ctx, node) => {
@@ -399,12 +371,16 @@ const nodeFunctions = {
         }
 
         loadedMods[modName] = builtIns.modules[modName];
+        return ctx;
     },
 
     "WhileStat": (ctx, node) => {
-        while (evalExpr(ctx, node.condition).value !== 0 && evalExpr(ctx, node.condition).value !== "" && evalExpr(ctx, node.condition).value.length !== 0 && evalExpr(ctx, node.condition).value !== null) {
+        while (true) {
+            const cond = evalExpr(ctx, node.condition);
+            if (cond.value === 0 || cond.value === null || cond.value === "" || (cond.value && cond.value.length === 0)) break;
             executeFunction(ctx, node.body);
         }
+        return ctx;
     },
 
     "FeachStat": (ctx, node) => {
@@ -413,57 +389,45 @@ const nodeFunctions = {
         const body = node.body;
 
         for (const jsElement of arr.value) {
-            ctx.scopes[ctx.curScope][elName] = {
-                type: jsElement.type,
-                value: jsElement.value
-            }
+            ctx.scopes[ctx.curScope][elName] = cloneValue(jsElement);
             executeFunction(ctx, body);
         }
         ctx.scopes[ctx.curScope][elName] = undefined;
+        return ctx;
     }
 }
+
+/* ---------------- expression evaluator ---------------- */
 
 function evalExpr(ctx, expr) {    
     switch (expr.type) {
         case nodeTypes.BinaryExpr: {
             if (!opFunctions[expr.operator]) { error(0); }
-
             return opFunctions[expr.operator](evalExpr(ctx, expr.left), evalExpr(ctx, expr.right));
         }
 
         case nodeTypes.UnaryExpr: {
             if (!opFunctionsUnary[expr.operator]) { error(0); }
-
             return opFunctionsUnary[expr.operator](evalExpr(ctx, expr.operand));
         }
 
         case nodeTypes.NumLiteral: {
-            return {
-                type: valTypes.Number,
-                value: expr.value
-            }
+            return { type: valTypes.Number, value: expr.value };
         }
 
         case nodeTypes.StrLiteral: {
-            return {
-                type: valTypes.String,
-                value: expr.value
-            }
+            return { type: valTypes.String, value: expr.value };
         }
 
         case nodeTypes.Identifier: {
             const posVar = scopeLookup(ctx, expr.name);
-
             if (!posVar) { error(14, [ expr.lineIndex ]); }
-
             return posVar;
         }
 
         case nodeTypes.ArrayLiteral: {
-            return {
-                type: valTypes.Array,
-                value: expr.elements.map(el => evalExpr(ctx, el))
-            }
+            const elements = expr.elements.map(el => cloneValue(evalExpr(ctx, el)));
+            return { type: valTypes.Array, value: elements };
         }
 
         case nodeTypes.FunctionCall: {
@@ -509,16 +473,19 @@ function evalExpr(ctx, expr) {
                 error(20, [ funcName ]);
             }
 
-            const argArr = [];
-            posFunc.arguments.forEach(el => {
-                argArr[el] = funcArgs.shift();
+            const argObj = {};
+            posFunc.arguments.forEach((name, i) => {
+                argObj[name] = cloneValue(funcArgs[i]);
             });
 
-            ctx.scopes.push(argArr);
-            ctx.curScope++;
-            const posRet = executeFunction(ctx, posFunc.body);
-            ctx.scopes.length--;
-            ctx.curScope--;
+            const newCtx = {
+                scopes: ctx.scopes.slice(),
+                curScope: ctx.curScope
+            };
+
+            newCtx.scopes.push(argObj);
+            newCtx.curScope++;
+            const posRet = executeFunction(newCtx, posFunc.body);
 
             if (posRet) { return posRet; }
             else { return { type: valTypes.Nil, value: null } }
@@ -543,17 +510,23 @@ function evalExpr(ctx, expr) {
     }
 }
 
+/* ---------------- scope lookup — return cloned values for variables ---------------- */
+
 function scopeLookup(ctx, name) {
-    while (ctx.curScope >= 0) {
-        if (ctx.scopes[ctx.curScope][name]) {
-            return {originScope: ctx.curScope, ...ctx.scopes[ctx.curScope][name]};
+    for (let i = ctx.curScope; i >= 0; i--) {
+        if (Object.prototype.hasOwnProperty.call(ctx.scopes[i], name) && ctx.scopes[i][name] !== undefined) {
+            const stored = ctx.scopes[i][name];
+            if (stored.arguments !== undefined && stored.body !== undefined) {
+                return { originScope: i, arguments: stored.arguments, body: stored.body };
+            }
+            const cloned = cloneValue(stored);
+            return { originScope: i, type: cloned.type, value: cloned.value };
         }
-
-        ctx.curScope--;
     }
-
     return null;
 }
+
+/* ---------------- executeFunction and entry point ---------------- */
 
 function executeFunction(ctx, body) {
     let j = 0;
@@ -567,7 +540,7 @@ function executeFunction(ctx, body) {
 
         if (!nodeFunctions[node.type]) { error(0); }
         
-        const result = nodeFunctions[node.type]({...ctx}, node);
+        const result = nodeFunctions[node.type](ctx, node);
         ctx = result ? result : ctx;
         if (ctx.stop) { break; }
 
@@ -578,7 +551,6 @@ function executeFunction(ctx, body) {
 }
 
 export function execute(body) {
-    // deno-lint-ignore prefer-const
     let programContext = {
         scopes: [ {} ],
         curScope: 0

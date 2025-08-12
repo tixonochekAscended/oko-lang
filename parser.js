@@ -483,7 +483,7 @@ export function buildTree(tokens) {
             return parseWhileStat();
         }
 
-        if (token.type == "Keyword" && token.value == "feach") {
+        if (token.type == "Keyword" && token.value == "for") {
             advance();
             return parseFeachStat();
         }
@@ -501,7 +501,7 @@ export function buildTree(tokens) {
             return null;
         }
 
-        if (token.type == "Keyword" && token.value == "funct") {
+        if (token.type == "Keyword" && token.value == "fun") {
             advance();
             return parseFunctionDeclaration();
         }

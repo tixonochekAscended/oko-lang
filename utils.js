@@ -18,7 +18,7 @@ Copyright (C) 2025 tixonochek
 import { red, yellow, reset } from "https://deno.land/std/fmt/colors.ts";
 
 const errorCodes = {
-    0: "An unknown error occured.",
+    0: "An unknown error occured. This could be caused by many things, including a JS error which shouldn't generally occur.",
     1: "Not enough arguments have been provided to the oko-lang interpreter.",
     2: "The file you provided, \"~\", does not have the extension \".oko\", which is necessary for the file to be interpreted and ran.",
     3: "The file you provided, \"~\", does not exist, can't be found or the oko-lang interpreter doesn't have the necessary permissions to read it.",
@@ -44,7 +44,8 @@ const errorCodes = {
     23: "Attempted to access a module that doesn't exist or hasn't been imported yet - \"~\".",
     24: "Attempted to import a module which doesn't exist - \"~\".",
     25: "Attempted to use a function \"~\" with the arguments of types it doesn't support.",
-    26: "~"
+    26: "~",
+    27: "Maximum call stack size exceeded. This means that the recursion depth limit has been exceeded."
 };
 
 const warnCodes = {

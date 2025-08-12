@@ -26,12 +26,12 @@ const bracketable = "()[]{}";
 
 const keywords = [
     "return",
-    "funct",
+    "fun",
     "while",
     "if",
     "else",
     "import",
-    "feach",
+    "for",
 ];
 
 const operators = [
