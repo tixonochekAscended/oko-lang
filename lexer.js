@@ -62,6 +62,7 @@ const escapeSequences = {
     "\\n": "\n",
     "\\e": "\x1B",
     "\\t": "\t",
+    '\\"': '"'
 };
 
 function doEscapeSequences(str) {
