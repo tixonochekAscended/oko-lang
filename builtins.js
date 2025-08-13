@@ -31,11 +31,21 @@ function stringify(value) {
 
 function numberize(value) {
     if (value.type == valTypes.Nil) {
-        return 0;
+        return {
+            type: valTypes.Number,
+            value: 0
+        };
     } else if (value.type == valTypes.String) {
-        return Number(value.value);
-    } else if (value.type == valTypes.Number) {
-        return value.value;
+        const posRes = Number(value.value);
+        return Number.isFinite(posRes) ? {
+            type: valTypes.Number,
+            value: posRes
+        } : {
+            type: valTypes.Nil,
+            value: null
+        };
+    } else if (value.type == valTypes.Number) { 
+        return value;
     } else { error(0); }
 }
 
@@ -73,6 +83,20 @@ export const modules = {
                     value: Date.now()
                 }
             }
+        },
+
+        sleep: {
+            requiredArgs: 1,
+            callback: (ms) => {
+                if (ms.type !== valTypes.Number) {
+                    error(25, ["sleep"]);
+                }
+
+                const end = Date.now() + ms.value;
+                while (Date.now() < end) { /* ... */ }
+        
+                return;
+            }
         }
     },
 
@@ -89,10 +113,7 @@ export const modules = {
                     error(25, [ "toNumber" ]);
                 }
 
-                return {
-                    type: valTypes.Number,
-                    value: numberize(value)
-                }
+                return numberize(value);
             }
         },
 
@@ -130,14 +151,14 @@ export const modules = {
             }
         },
 
-        print: {
-            requiredArgs: Infinity,
-            callback: (printables) => {
-                printables = printables.map(x => stringify(x)).join(" ");
-
-                Deno.stdout.writeSync(new TextEncoder().encode(printables));
-            }
-        },
+        //print: {
+        //    requiredArgs: Infinity,
+        //    callback: (printables) => {
+        //        printables = printables.map(x => stringify(x)).join(" ");
+        //
+        //        Deno.stdout.write(new TextEncoder().encode(printables));
+        //    }
+        //},
 
         println: {
             requiredArgs: Infinity,

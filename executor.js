@@ -532,7 +532,7 @@ function executeFunction(ctx, body) {
     let j = 0;
 
     function peek(index = 0) {
-        return (body[j + index]) ? body[j + index] : null;
+        return (body.body[j + index]) ? body.body[j + index] : null;
     }
 
     while (peek() !== null) {
@@ -556,5 +556,5 @@ export function execute(body) {
         curScope: 0
     }
 
-    executeFunction(programContext, body.body);
+    executeFunction(programContext, body);
 }

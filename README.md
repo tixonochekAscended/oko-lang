@@ -110,19 +110,20 @@ As you may have already noticed, we `import` a lot of things to get things done.
 
 - `time` (Time Utilities)
   - `now()`: Returns the current timestamp in milliseconds since the Unix epoch
+  - `sleep(ms)`: Stops the program execution for a certain amount of milliseconds.
 
 - `tu` (Type Utilities)
   - `getNil()`: Returns `nil` (no value)
-  - `toNumber(value)`: Converts a value to a number, errors if value is an array
+  - `toNumber(value)`: Converts a value to a number, if a string can not be converted to a number returns Nil, errors if value is an array
   - `toString(value)`: Converts a value to its string representation
   - `typeOf(value)`: Returns the type of the given value as a string
 
 - `io` (Input/Output)
   - `input()`: Prompts the user for input, returns a string or nil if empty
-  - `print(...args)`: Prints values without newline, joined by space
+  - ~~`print(...args)`: Prints values without newline, joined by space~~ **🔴 Does not work at the moment because of the issues caused by Deno and the inability to easily flush the standart output.**
   - `println(...args)`: Prints values with newline, joined by space
-  - `readTextFile(path)`: Reads the contents of a text file at the given path
-  - `writeTextFile(path, content)`: Writes the content string to a file at the given path, returns 1 on success
+  - `readTextFile(path)`: Reads the contents of a text file at the given path. Returns the contents on success and Nil on failure.
+  - `writeTextFile(path, content)`: Writes the content string to a file at the given path, returns 1 on success and Nil on failure.
 
 - `math` (Mathematical Functions)
   - `sqrt(num)`: Returns the square root of a number or nil if invalid

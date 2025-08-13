@@ -63,13 +63,17 @@ function run() {
         else { utils.error(0) }
     }
 
+    runScript(script);
+}
+
+function runScript(script) {
     const tokens = lexer.tokenize(script);
     const ast = parser.buildTree(tokens);
     try {
         executor.execute(ast);
     } catch (error) {
         if (error instanceof RangeError) { utils.error(27) }
-        else { utils.error(0) }
+        else { utils.error(28, [ error ]) }
     }
 }
 
