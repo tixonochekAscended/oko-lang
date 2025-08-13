@@ -73,7 +73,9 @@ function runScript(script) {
         executor.execute(ast);
     } catch (error) {
         if (error instanceof RangeError) { utils.error(27) }
-        else { utils.error(28, [ error ]) }
+        else { 
+            utils.error(28, [ error ])
+        }
     }
 }
 

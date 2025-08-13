@@ -183,7 +183,7 @@ export function tokenize(script) {
             continue;
         }
 
-        if (currentlyLexing === "nothing" && char === "\n") {
+        if (currentlyLexing === "nothing" && (char === "\n" || char === "\r")) {
             if (commentSkip) {
                 commentSkip = false;
             }

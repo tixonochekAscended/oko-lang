@@ -9,7 +9,7 @@
 ## ⚠️ Warning (& Contribution)
 At the moment, oko-lang is in its early stage of development. Expect ground-breaking changes, no backward compatability, significant performance and development experience improvements and much more. If you would like to contribute to the language by any means, [we have a discord server.](https://discord.gg/NSK7YJ2R6j) There you can contact me - the main developer - and other people who are willing to help us build **oko**.
 
-## 🔌 **VSCode Extension**
+## 🔌 VSCode Extension
 If you happen to be using __Visual Studio Code__ as your primary code editor / IDE, there is an [official extension for the oko programming language.]() Some of the features include:
 1. Syntax Highlighting
 2. Code Snippets

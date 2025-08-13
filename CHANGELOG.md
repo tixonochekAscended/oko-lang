@@ -22,3 +22,10 @@ Changes:
 2. Instead of JS's `NaN` `tu::toNumber()` now returns oko's `Nil` when a String is not numerical.
 3. Added a new method to the `time` module: `time::sleep(ms)`. F.e., `time::sleep(2000)` will stop the execution of the program for 2 seconds.
 4. Added a separate type of error for a JS-invoked error (No `28`).
+
+## Version `1.21`
+__(13th August)__
+
+Changes:
+1. Now, `\r` is accounted for on Windows systems. Before this change, oko did not launch on Windows machines.
+2. Fixed a critical bug that made it so no `.oko` file could be executed.
