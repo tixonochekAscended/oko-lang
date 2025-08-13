@@ -32,11 +32,11 @@ If you would like to see some information regarding **oko-lang**'s license, use 
 
 ## 📜 Guide regarding oko-lang
 The syntax of **oko** is dead simple. Every statement (besides the ones that end in ` { blocks } `) should have a trailing **semicolon** `;`. Example:
-```oko
+```js
 io::println("Hello, World!");
 ```
 To define variables, you use the `:=` assignment operator. There also are other ones, like `=`, `+=`, `-=`, `*=` and `/=`. The difference between `:=` and `=` is that the `=` operator can by definition only mutate an existing variable - it can't be used to change a variable's type or to set a value to a variable that hasn't been declared and initialized yet.
-```oko
+```js
 var := 13;
 var += 13;
 var -= 13;
@@ -45,11 +45,11 @@ var /= 13;
 var = 13;
 ```
 Just so you know, there are only single-line comments in **oko**, which use the following syntax:
-```oko
+```js
 // this is a comment
 ```
 Here is an example regarding variables that will throw an error:
-```oko
+```js
 msg := "Hello, World!";
 msg = -0.13 // can't change the variable's type via `=` from String to Number
 ```
@@ -59,7 +59,7 @@ Now let's get to operators. Here's a complete list of them (this doesn't include
 Before we continue, you must know that the only 4 data types in **oko** are: `String`, `Number`, `Array` and `Nil`. This doesn't mean the language isn't capable though.
 
 You can easily manipulate program flow via `if`, `elif` (`else if`) and `else` statements. As you already know there are no booleans, so numbers are usually used instead of them. An empty array `[]`, zero `0`, an empty string `""` and nil are all falsy - others are truthful. Here is a code example that will output `Omega`:
-```oko
+```js
 import io;
 import tu;
 
@@ -77,7 +77,7 @@ if ("") {
 ```
 
 At the moment, **oko** features 2 types of loops: `while` and `for` (which is a `forEach`). Here's an example for you:
-```oko
+```js
 import io;
 
 j := 1;
@@ -155,17 +155,17 @@ As you may have already noticed, we `import` a lot of things to get things done.
   - `join(arr, separator)`: Joins array elements into a string separated by the given separator, replacing nil elements with "Nil"
 
 To use any of the described functions, you need to firstly `import` the module you want to use, f.e.:
-```
+```js
 import io;
 ```
 And then call any function from that specific module via the **mod access operator** `mod::func`:
-```
+```js
 io::println("msg");
 ```
 It's that simple.
 
 At last, here's how you can create your own functions. You need to use the `fun` keyword to do so. Here are some code examples:
-```oko
+```js
 import io;
 
 fun sum(a, b) {
@@ -178,7 +178,7 @@ fun thisReturnsNil(msg) {
 ```
 If a function doesn't feature a `return` statement, it returns `Nil` - which by the way doesn't have its own specific keyword. The easiest way to get Nil is by using `tu::getNil()` module method.
 You also are allowed to nest function definitions:
-```oko
+```js
 import io;
 
 fun outer(a, b) {
