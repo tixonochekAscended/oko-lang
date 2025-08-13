@@ -76,7 +76,7 @@ if ("") {
 }
 ```
 
-At the moment, **oko** features 2 types of loops: `while` and `feach` (which stands for `forEach`). Here's an example for you:
+At the moment, **oko** features 2 types of loops: `while` and `for` (which is a `forEach`). Here's an example for you:
 ```oko
 import io;
 
@@ -87,7 +87,7 @@ while (j <= 5) {
 }
 
 items := ["Apple", "Banana", "Pear"];
-feach (el) (items) {
+for (el) (items) {
   io::println(el);
 }
 ```
@@ -164,15 +164,15 @@ io::println("msg");
 ```
 It's that simple.
 
-At last, here's how you can create your own functions. You need to use the `funct` keyword to do so. Here are some code examples:
+At last, here's how you can create your own functions. You need to use the `fun` keyword to do so. Here are some code examples:
 ```oko
 import io;
 
-funct sum(a, b) {
+fun sum(a, b) {
   return a + b;
 }
 
-funct thisReturnsNil(msg) {
+fun thisReturnsNil(msg) {
   io::println(msg);
 }
 ```
@@ -181,12 +181,12 @@ You also are allowed to nest function definitions:
 ```oko
 import io;
 
-funct outer(a, b) {
-  funct inner(a, b, c) {
+fun outer(a, b) {
+  fun inner(c) {
     return a + b + c;
   }
 
-  return inner(a, b, 5);
+  return inner(5);
 }
 
 io::println(outer(2, 3));
