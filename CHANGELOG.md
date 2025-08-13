@@ -3,10 +3,12 @@ This file is a changelog containing all changes for each respective version of t
 
 ## Version `1.0`
 _(12th August)_
+
 The initial release of **oko-lang**. Nothing of interest.
 
 ## Version `1.1`
 _(12th August)_
+
 Changes:
 1. Fixed major scope bugs, which allows for recursion to actually work
 2. `funct` keyword was renamed into `fun`
