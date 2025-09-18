@@ -47,7 +47,8 @@ fn do_escape_sequences(seq: &mut String)
 pub enum TokenClass {
     Operator(String),
     String(String),
-    Number(i32),
+    Integer(i64),
+    Float(f64),
     Identifier(String),
     Keyword(String),
     EndOfStatement, // ;
@@ -91,11 +92,11 @@ fn get_char_state(char: char) -> CharType {
     return match char {
         x if x.is_alphabetic() => CharType::Alpha,
         x if x.is_numeric() => CharType::Num,
-        '-' => CharType::Num,
+        '-' | '.' => CharType::Num,
         '"' => CharType::Quote,
         '(' => CharType::ParenOpen,   ')' => CharType::ParenClose,
         '{' => CharType::CurlyOpen,   '}' => CharType::CurlyClose,
-        '[' => CharType::BracketOpen, ']' => CharType::BracketOpen,
+        '[' => CharType::BracketOpen, ']' => CharType::BracketClose,
         ' ' | '\n' | '\t' => CharType::Format,
         _ => CharType::Symbol
     }
@@ -120,7 +121,9 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String) {
         },
         CharType::Num => match buf_ref {
             "-" => TokenClass::Operator(buffer.clone()), //dash might be operators or part of number
-            _   => TokenClass::Number(buffer.parse::<i32>().unwrap()),
+            x if x.parse::<i64>().is_ok() => TokenClass::Integer(x.parse().unwrap()),
+            x if x.parse::<f64>().is_ok() => TokenClass::Float  (x.parse().unwrap()),
+            x => panic!("Error: Token '{}' looks like a number, but cannot be parsed.", x)
         },
         CharType::Quote     => TokenClass::String(buffer.trim_matches('"').to_string()),
         CharType::ParenOpen   => TokenClass::ParenOpen,   CharType::ParenClose   => TokenClass::ParenClose,
@@ -133,7 +136,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String) {
             ";" => TokenClass::EndOfStatement,
             "::" => TokenClass::Namespace,
             x if OPERATORS.contains(&x) => TokenClass::Operator(buffer.clone()),
-            x => panic!("Symbol '{}' cannot be categorized", x),
+            x => panic!("Error: Symbol '{}' cannot be categorized.", x),
         },
     };
 
@@ -162,7 +165,7 @@ pub fn lex(source: &String) -> Stream {
 
         //meta-states
         if buffer == "//" { comment = true; buffer.clear() }
-        if buffer == "\n" { comment = false; line_index += 1; }
+        if char   == '\n' { comment = false; line_index += 1; }
 
         if state != last && !comment {
             push_token(&mut out, &last, &buffer);
@@ -170,7 +173,9 @@ pub fn lex(source: &String) -> Stream {
             buffer.clear();
         }
 
-        buffer.push(char);
+        if !comment {
+            buffer.push(char);
+        }
         last = state;
     }
 
