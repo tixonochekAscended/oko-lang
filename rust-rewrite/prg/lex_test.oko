@@ -1,0 +1,66 @@
+
+io::println("Hello, World!");
+
+var := 13;
+var += 13;
+var -= 13;
+var *= 13;
+var /= 13;
+var = 13;
+
+// this is a comment
+
+msg := "Hello, World!";
+msg = -0.13 // can't change the variable's type via `=` from String to Number
+
+import io;
+import tu;
+
+if ("") {
+  io::println("Steak");
+} elif ([]) {
+  io::println("Trophy");
+} elif ( tu::getNil() ) {
+  io::println("Cat");
+} elif (1) {
+  io::println("Omega");
+} else {
+  io::println("Princess");
+}
+
+import io;
+
+j := 1;
+while (j <= 5) {
+  io::println(j);
+  j += 1;
+}
+
+items := ["Apple", "Banana", "Pear"];
+for (el) (items) {
+  io::println(el);
+}
+
+import io;
+
+fun sum(a, b) {
+  return a + b;
+}
+
+fun thisReturnsNil(msg) {
+  io::println(msg);
+}
+
+
+import io;
+
+fun outer(a, b) {
+  fun inner(c) {
+    return a + b + c;
+  }
+
+  return inner(5);
+}
+
+io::println(outer(2, 3));
+
