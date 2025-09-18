@@ -162,16 +162,15 @@ pub fn lex(source: &String) -> Stream {
     for char in source.chars() {
         state = get_char_state(char);
 
-        //meta-states
         if buffer == "//" { in_comment = true; buffer.clear() }
-        if char   == '\n' { in_comment = false; line_index += 1; }
-
         if last == CharType::Quote { in_string = !in_string; }
 
         if state != last && !in_comment && !in_string {
             push_token(&mut out, &last, &buffer, line_index);
             buffer.clear();
         }
+
+        if char   == '\n' { in_comment = false; line_index += 1; }
 
         if !in_comment {
             buffer.push(char);
