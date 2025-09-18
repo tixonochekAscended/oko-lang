@@ -35,10 +35,10 @@ const ESCAPE_SEQUENCES: [[&str; 2]; 4] = [
 ];
 
 
-fn do_escape_sequences(seq: &String)
+fn do_escape_sequences(seq: &mut String)
 {
     for map in ESCAPE_SEQUENCES.iter() {
-        seq.replace(map[0], map[1]);
+        *seq = seq.replace(map[0], map[1]);
     }
 }
 
@@ -58,6 +58,7 @@ pub enum TokenClass {
     ParenOpen, ParenClose,
     CurlyOpen, CurlyClose,
     BracketOpen, BracketClose,
+    Namespace, // ::
 }
 
 
@@ -82,6 +83,7 @@ enum CharType {
     CurlyOpen, CurlyClose,      //{}
     BracketOpen, BracketClose,  //[]
     Symbol,
+    Format, //newlines, spaces, etc.
 }
 
 
@@ -90,10 +92,11 @@ fn get_char_state(char: char) -> CharType {
         x if x.is_alphabetic() => CharType::Alpha,
         x if x.is_numeric() => CharType::Num,
         '-' => CharType::Num,
-        '\'' => CharType::Quote,
+        '"' => CharType::Quote,
         '(' => CharType::ParenOpen,   ')' => CharType::ParenClose,
         '{' => CharType::CurlyOpen,   '}' => CharType::CurlyClose,
         '[' => CharType::BracketOpen, ']' => CharType::BracketOpen,
+        ' ' | '\n' | '\t' => CharType::Format,
         _ => CharType::Symbol
     }
 }
@@ -102,11 +105,12 @@ fn get_char_state(char: char) -> CharType {
 
 
 
-fn push_token(out: &Stream, state: CharType, buffer: &String) {
+fn push_token(out: &mut Stream, state: &CharType, buffer: &String) {
     let buf_ref: &str = buffer.as_str();
 
-    let data: TokenClass =  match state {
+    let data: TokenClass =  match *state {
         CharType::Invalid   => { return; },
+        CharType::Format    => { return; },
         CharType::Alpha     => {
             let content: String = buffer.clone();
             match buf_ref {
@@ -125,12 +129,18 @@ fn push_token(out: &Stream, state: CharType, buffer: &String) {
         CharType::Symbol    => match buf_ref {
             "=" => TokenClass::Assign, ":=" => TokenClass::Define, 
             "+=" | "-=" | "*=" | "/=" => TokenClass::AssignOp,
+            "," => TokenClass::Comma,
+            ";" => TokenClass::EndOfStatement,
+            "::" => TokenClass::Namespace,
             x if OPERATORS.contains(&x) => TokenClass::Operator(buffer.clone()),
             x => panic!("Symbol '{}' cannot be categorized", x),
         },
     };
 
-    
+    out.push(Token {
+        data,
+        line_index : 0,
+    }); 
 
 }
 
@@ -138,18 +148,24 @@ pub fn lex(source: &String) -> Stream {
     let mut out: Stream  = vec![];
 
     let mut buffer: String = Default::default();
-    let mut state = CharType::Invalid;
     let mut last  = CharType::Invalid;
+    let mut state;
 
     let mut line_index: u32 = 0;
-    let mut line_text: String;
+    //let mut line_text: String;
 
+    let mut comment: bool = false;
+    let mut string : bool = false;
 
     for char in source.chars() {
         state = get_char_state(char);
 
-        if state != last {
-            //push_token();
+        //meta-states
+        if buffer == "//" { comment = true; buffer.clear() }
+        if buffer == "\n" { comment = false; line_index += 1; }
+
+        if state != last && !comment {
+            push_token(&mut out, &last, &buffer);
             
             buffer.clear();
         }
