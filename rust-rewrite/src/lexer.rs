@@ -106,7 +106,7 @@ fn get_char_state(char: char) -> CharType {
 
 
 
-fn push_token(out: &mut Stream, state: &CharType, buffer: &String) {
+fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u32) {
     let buf_ref: &str = buffer.as_str();
 
     let data: TokenClass =  match *state {
@@ -142,7 +142,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String) {
 
     out.push(Token {
         data,
-        line_index : 0,
+        line_index,
     }); 
 
 }
@@ -155,25 +155,25 @@ pub fn lex(source: &String) -> Stream {
     let mut state;
 
     let mut line_index: u32 = 0;
-    //let mut line_text: String;
 
-    let mut comment: bool = false;
-    let mut string : bool = false;
+    let mut in_comment: bool = false;
+    let mut in_string : bool = false;
 
     for char in source.chars() {
         state = get_char_state(char);
 
         //meta-states
-        if buffer == "//" { comment = true; buffer.clear() }
-        if char   == '\n' { comment = false; line_index += 1; }
+        if buffer == "//" { in_comment = true; buffer.clear() }
+        if char   == '\n' { in_comment = false; line_index += 1; }
 
-        if state != last && !comment {
-            push_token(&mut out, &last, &buffer);
-            
+        if last == CharType::Quote { in_string = !in_string; }
+
+        if state != last && !in_comment && !in_string {
+            push_token(&mut out, &last, &buffer, line_index);
             buffer.clear();
         }
 
-        if !comment {
+        if !in_comment {
             buffer.push(char);
         }
         last = state;
