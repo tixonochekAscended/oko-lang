@@ -35,11 +35,13 @@ const ESCAPE_SEQUENCES: [[&str; 2]; 4] = [
 ];
 
 
-fn do_escape_sequences(seq: &mut String)
+fn do_escape_sequences(mut seq: String) -> String
 {
     for map in ESCAPE_SEQUENCES.iter() {
-        *seq = seq.replace(map[0], map[1]);
+        seq = seq.replace(map[0], map[1]);
     }
+
+    return seq;
 }
 
 
@@ -113,14 +115,13 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
         CharType::Invalid   => { return; },
         CharType::Format    => { return; },
         CharType::Alpha     => {
-            let content: String = buffer.clone();
+            let content: String = do_escape_sequences(buffer.clone());
             match buf_ref {
                 x if KEYWORDS.contains(&x) => TokenClass::Keyword(content),
                 _                          => TokenClass::Identifier(content),
             }
         },
         CharType::Num => match buf_ref {
-            "-" => TokenClass::Operator(buffer.clone()), //dash might be operators or part of number
             x if x.parse::<i64>().is_ok() => TokenClass::Integer(x.parse().unwrap()),
             x if x.parse::<f64>().is_ok() => TokenClass::Float  (x.parse().unwrap()),
             x => panic!("Error: Token '{}' looks like a number, but cannot be parsed.", x)
