@@ -55,7 +55,7 @@ pub enum TokenClass {
     Comma,
     Define, // :=
     Assign, // =
-    AssignOp, // +=, -=, etc. 
+    AssignOp(String), // +=, -=, etc. 
     ParenOpen, ParenClose,
     CurlyOpen, CurlyClose,
     BracketOpen, BracketClose,
@@ -131,7 +131,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
         CharType::BracketOpen => TokenClass::BracketOpen, CharType::BracketClose => TokenClass::BracketClose,
         CharType::Symbol    => match buf_ref {
             "=" => TokenClass::Assign, ":=" => TokenClass::Define, 
-            "+=" | "-=" | "*=" | "/=" => TokenClass::AssignOp,
+            "+=" | "-=" | "*=" | "/=" => TokenClass::AssignOp(buffer.clone()),
             "," => TokenClass::Comma,
             ";" => TokenClass::EndOfStatement,
             "::" => TokenClass::Namespace,
