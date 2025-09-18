@@ -1,4 +1,3 @@
-*.oko
 .vscode/
 *.tar.gz
 oko-*/
