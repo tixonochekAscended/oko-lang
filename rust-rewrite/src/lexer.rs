@@ -253,7 +253,7 @@ pub fn lex(source: &String) -> Stream {
     let mut last  = CharType::Invalid;
     let mut state;
 
-    let mut line_index: u32 = 0;
+    let mut line_index: u32 = 1;
 
     let mut in_comment: bool = false;
     let mut in_string : bool = false;
