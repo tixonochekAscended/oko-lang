@@ -1,3 +1,5 @@
+use core::fmt;
+
 
 
 
@@ -45,11 +47,11 @@ fn do_escape_sequences(mut seq: String) -> String
 }
 
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum TokenClass {
     Operator(String),
     String(String),
-    Integer(i64),
+    Integer(u64),
     Float(f64),
     Identifier(String),
     Keyword(String),
@@ -64,6 +66,32 @@ pub enum TokenClass {
     Namespace, // ::
 }
 
+impl fmt::Display for TokenClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Operator(ref x)   => write!(f, "Operator({})", x),
+            Self::String(ref x)     => write!(f, "String({})", x),
+            Self::Integer(ref x)    => write!(f, "Integer({})", x),
+            Self::Float(ref x)      => write!(f, "Float({})", x),
+            Self::Identifier(ref x) => write!(f, "Identifier({})", x),
+            Self::Keyword(ref x)    => write!(f, "Keyword({})", x),
+            Self::EndOfStatement    => write!(f, "EndOfStatement(;)"),
+            Self::Comma             => write!(f, "Comma"),
+            Self::Define            => write!(f, "Define(:=)"),
+            Self::Assign            => write!(f, "Assign(=)"),
+            Self::AssignOp(ref x)   => write!(f, "AssignOp({})", x),
+            Self::ParenOpen         => write!(f, "ParenOpen"),
+            Self::ParenClose        => write!(f, "ParenClose"),
+            Self::CurlyOpen         => write!(f, "CurlyOpen"),
+            Self::CurlyClose        => write!(f, "CurlyClose"),
+            Self::BracketOpen       => write!(f, "BracketOpen"),
+            Self::BracketClose      => write!(f, "BracketClose"),
+            Self::Namespace         => write!(f, "Namespace(::)")
+        }
+    }
+}
+
+
 
 #[derive(Debug)]
 pub struct Token {
@@ -75,20 +103,28 @@ pub struct Token {
 pub struct Stream {
     tokens: Vec<Token>,
     index: usize,
+    last_line_index: u32,
 }
 
 impl Stream {
     fn push (&mut self, token: Token) {
         self.tokens.push(token);
     }
-    pub fn has(&self) -> bool {
+
+    fn has(&self) -> bool {
         return self.index < self.tokens.len();
     }
 
-    pub fn peek(&self) -> Option<&Token> {
+    fn get(&mut self, index: usize) -> &Token {
+        let token = &self.tokens[index];
+        self.last_line_index = token.line_index;
+        token
+    }
+
+    pub fn peek(&mut self) -> Option<&Token> {
         if !self.has() { return None }
         
-        return Some(&self.tokens[self.index]);
+        return Some(self.get(self.index));
     }
 
     pub fn next(&mut self) {
@@ -100,8 +136,24 @@ impl Stream {
 
         let i = self.index;
         self.next();
-        return Some(&self.tokens[i]);
+        return Some(self.get(i));
     }
+
+    pub fn expect(&mut self, should: TokenClass) {
+        let Some(token) = self.pop() else { 
+            self.error(format!("Expected {}, but end of token stream.", should).as_str()) 
+        };
+        let got = token.data.clone();
+        if should != got {
+            self.error(format!("Expected {}, but got {}.", should, got).as_str());
+        }
+    }
+
+    pub fn error(&self, msg: &str) -> ! {
+        eprintln!("Error at line {}: {}", self.last_line_index, msg);
+        std::process::exit(1);
+    }
+
 
 }
 
@@ -156,7 +208,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
             }
         },
         CharType::Num => match buf_ref {
-            x if x.parse::<i64>().is_ok() => TokenClass::Integer(x.parse().unwrap()),
+            x if x.parse::<u64>().is_ok() => TokenClass::Integer(x.parse().unwrap()),
             x if x.parse::<f64>().is_ok() => TokenClass::Float  (x.parse().unwrap()),
             x => panic!("Error: Token '{}' looks like a number, but cannot be parsed.", x)
         },
