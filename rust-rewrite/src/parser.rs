@@ -1,5 +1,5 @@
 
-use crate::lexer;
+use crate::lexer::{self, Stream};
 type Streaming<'a> = &'a mut lexer::Stream;
 
 const UNARY_OPS: [&str; 2] = ["!", "-"];
@@ -68,6 +68,8 @@ fn parse_condition(stream: Streaming) -> Node {
     return expr;
 }
 
+impl Nodeable for StatSeq {}
+
 
 impl IfStat {
     fn parse(stream: Streaming) -> Self {
@@ -98,23 +100,49 @@ impl Nodeable for WhileStat {}
 impl Nodeable for ForStat {}
 
 
+fn lookhead_fn_call(stream: &Stream) -> bool {
+    match stream.lookhead(1) {
+        Some(lexer::TokenClass::ParenOpen) => true,
+        _ => false,
+    }
+}
+
+fn lookhead_mod(stream: &Stream) -> bool {
+    match stream.lookhead(1) {
+        Some(lexer::TokenClass::Namespace) => true,
+        _ => false,
+    }
+}
+
+
+impl Nodeable for ArrayLiteral {}
+impl Nodeable for IntLiteral {}
+impl Nodeable for StrLiteral {}
+impl Nodeable for FloatLiteral {}
+impl Nodeable for FunctionCall {}
+impl Nodeable for ModAccess {}
+impl Nodeable for Variable {}
+
+
+
+
 fn parse_primary_expr(stream: Streaming) -> Node {
-    let Some(token) = stream.peek() else { stream.error("End of token stream while parsing primary expression."); }
+    let Some(token) = stream.peek() else { stream.error("End of token stream while parsing primary expression."); };
     
-    match token.data {
-        lexer::TokenClass::BracketOpen  => ArrayLiteral::parse(stream),
-        lexer::TokenClass::Operator(op) if UNARY_OPS.contains(&x.as_str()) => {
+    match token.data.clone() {
+        lexer::TokenClass::BracketOpen  => Box::new(ArrayLiteral::parse(stream)) as Node,
+        lexer::TokenClass::Operator(ref op) if UNARY_OPS.contains(&op.as_str()) => {
             stream.next();
             let operand = parse_expr_prec(stream, 9);
-            Box::new(UnaryExpr { operand, op }) as Node
+            Box::new(UnaryExpr { operand, op: op.clone() }) as Node
         },
-        lexer::TokenClass::Integer(x) => IntLiteral   { value: x },
-        lexer::TokenClass::Float(x)   => FloatLiteral { value: x },
-        lexer::TokenClass::String(x)  => StrLiteral   { value: x.clone() },
-        lexer::TokenClass::Identifier(_) if lookhead_fn_call(stream) => FunctionCall::parse(stream),
-        lexer::TokenClass::Identifier(_) if lookhead_mod(stream)     => ModAccess::parse(stream),
-        lexer::TokenClass::Identifier(x) => Variable  { name: x.clone() },
-        lexer::TokenClass::ParenOpen      => {
+        lexer::TokenClass::Integer(x)     => Box::new(IntLiteral   { value: x }) as Node,
+        lexer::TokenClass::Float(x)       => Box::new(FloatLiteral { value: x }) as Node,
+        lexer::TokenClass::String(ref x)  => Box::new(StrLiteral   { value: x.clone() }) as Node,
+        lexer::TokenClass::Identifier(_) if lookhead_fn_call(stream) => Box::new(FunctionCall::parse(stream)) as Node,
+        lexer::TokenClass::Identifier(_) if lookhead_mod(stream)     => Box::new(ModAccess::parse(stream)) as Node,
+        lexer::TokenClass::Identifier(ref x) => Box::new(Variable  { name: x.clone() }) as Node,
+        lexer::TokenClass::ParenOpen     => {
             stream.next();
             let expr = parse_expr(stream);
             stream.expect(lexer::TokenClass::ParenClose);
@@ -333,7 +361,10 @@ impl Nodeable for ExprStat {}
 
 
 fn lookhead_assign(stream: &lexer::Stream) -> bool {
-
+    match stream.lookhead(1) {
+        Some(lexer::TokenClass::AssignOp(_)) => true,
+        _ => false
+    }
 }
 
 
@@ -341,13 +372,6 @@ fn parse_statement(stream: Streaming) -> Option<Node> {
     let Some(ref token_ref) = stream.peek() else { return None };
     let token = token_ref.clone();
 
-
-    //keyword have to be pre-advanced
-    /*
-    if let lexer::TokenClass::Keyword(_) = token.data {
-        stream.next();
-    }*/
-    
     Some(match token.data {
         lexer::TokenClass::Keyword(ref x) if x == "if"      => Box::new(IfStat::parse(stream)) as Node,
         lexer::TokenClass::Keyword(ref x) if x == "while"   => Box::new(WhileStat::parse(stream)) as Node,
