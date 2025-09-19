@@ -160,11 +160,11 @@ impl Stream {
         if can == got { self.next(); }
     }
 
-    pub fn lookhead(&self, offset: usize) -> Option<&Token> {
+    pub fn lookhead(&self, offset: usize) -> Option<&TokenClass> {
         let at: usize = self.index + offset;
         if at >= self.tokens.len() { return None }
         
-        return Some(&self.tokens[at]);
+        return Some(&self.tokens[at].data);
     }
 
 }
@@ -247,7 +247,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
 }
 
 pub fn lex(source: &String) -> Stream {
-    let mut out = Stream { tokens: vec![], index: 0 };
+    let mut out = Stream { tokens: vec![], index: 0, last_line_index: 0};
 
     let mut buffer: String = Default::default();
     let mut last  = CharType::Invalid;
