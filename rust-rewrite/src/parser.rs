@@ -73,7 +73,7 @@ impl Nodeable for StatSeq {}
 
 impl IfStat {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("if");
+        stream.maybe(lexer::TokenClass::Keyword("if".to_string()));
         let condition: Node  = parse_condition(stream);
         let if_block: StatSeq = parse_block(stream);
 
@@ -160,16 +160,18 @@ fn parse_expr(stream: Streaming) -> Node {
 
 fn parse_expr_prec(stream: Streaming, precedence: u32) -> Node {
     let mut left = parse_primary_expr(stream);
-    let Some(token) = stream.peek() else { stream.error("End of token stream while parsing precedented expression."); };
  
-    if let lexer::TokenClass::Operator(op) = token.data {
-        while precedence <= get_op_precedence(op.as_str()) {
-            let right = parse_expr_prec(stream, get_op_precedence(op.as_str()));
+    loop {
+        let Some(token) = stream.peek() else { break; };
+        let lexer::TokenClass::Operator(ref op_ref) = token.data else { break; };
+        if precedence > get_op_precedence(op_ref.as_str()) { break; }
+        let op = op_ref.clone();
 
-            left = Box::new(BinaryExpr { 
-                op, left, right
-            }) as Node;
-        }
+        let right = parse_expr_prec(stream, get_op_precedence(op.as_str()));
+
+        left = Box::new(BinaryExpr { 
+            op, left, right
+        }) as Node;
     }
 
     left
@@ -177,15 +179,16 @@ fn parse_expr_prec(stream: Streaming, precedence: u32) -> Node {
 
 
 fn parse_func_args(stream: Streaming) -> Vec<String> {
-    let out: Vec<String> = vec![];
+    let mut out: Vec<String> = vec![];
     stream.expect(lexer::TokenClass::ParenOpen);
 
     while let Some(x) = stream.peek() {
         match x.data {
-            lexer::TokenClass::Identifier(x) => {
+            lexer::TokenClass::Identifier(ref x) => {
+                let arg = x.clone();
                 stream.next();
-                stream.maybe(",");
-                out.push(x);
+                stream.maybe(lexer::TokenClass::Comma);
+                out.push(arg);
             },
             lexer::TokenClass::ParenClose => { break; }
             _ => stream.error("Expected identifier or closing parenthesis")
@@ -198,7 +201,7 @@ fn parse_func_args(stream: Streaming) -> Vec<String> {
 
 impl WhileStat {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("while");
+        stream.maybe(lexer::TokenClass::Keyword("while".to_string()));
         let condition = parse_condition(stream);
         let body = parse_block(stream);
         WhileStat { condition, body }
@@ -207,7 +210,7 @@ impl WhileStat {
 
 impl ForStat {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("for");
+        stream.maybe(lexer::TokenClass::Keyword("for".to_string()));
         stream.expect(lexer::TokenClass::ParenOpen);
         let Some(token) = stream.pop() else { stream.error("End of token stream while parsing for loop."); };
         let lexer::TokenClass::Identifier(ref elem_name_ref) = token.data else { stream.error("Expected identifier for element name"); };
@@ -226,7 +229,7 @@ impl ForStat {
 
 impl ReturnStat {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("return");
+        stream.maybe(lexer::TokenClass::Keyword("return".to_string()));
         let Some(token) = stream.pop() else { stream.error("End of token stream while parsing return statement."); };
 
         let expr: Option<Node> = match token.data {
@@ -242,7 +245,7 @@ impl ReturnStat {
 
 impl FunctionDeclare {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("fun");
+        stream.maybe(lexer::TokenClass::Keyword("fun".to_string()));
         let Some(token) = stream.pop() else { stream.error("End of token stream while parsing function delcaration."); };
         let lexer::TokenClass::Identifier(ref name_ref) = token.data else { stream.error("Expected identifier."); };
         let name = name_ref.clone();
@@ -256,12 +259,12 @@ impl FunctionDeclare {
 
 
 fn parse_call_args(stream: Streaming) -> Vec<Node> {
-    let out: Vec<Node> = vec![];
+    let mut out: Vec<Node> = vec![];
     stream.expect(lexer::TokenClass::ParenOpen);
 
-    while let Some(x) = stream.peek() {
+    while let Some(_) = stream.peek() {
         out.push(parse_expr(stream));
-        stream.maybe(",");
+        stream.maybe(lexer::TokenClass::Comma);
     }
 
     stream.expect(lexer::TokenClass::ParenClose);
@@ -297,7 +300,7 @@ impl ModAccess {
 
 impl ImportStat {
     fn parse(stream: Streaming) -> Self {
-        stream.maybe("import")
+        stream.maybe(lexer::TokenClass::Keyword("import".to_string()));
         let Some(mod_token) = stream.pop() else { stream.error("End of token stream while parsing module import."); };
         let lexer::TokenClass::Identifier(ref mod_ref) = mod_token.data else { stream.error("Expected import identifier."); };
         let mod_name = mod_ref.clone();
@@ -332,12 +335,12 @@ impl ArrayLiteral {
     fn parse(stream: Streaming) -> Self {
         stream.expect(lexer::TokenClass::BracketOpen);
         
-        let elem: Vec<Node> = vec![];
+        let mut elem: Vec<Node> = vec![];
 
         while let Some(token) = stream.peek() {
             if let lexer::TokenClass::BracketClose = token.data { break; }
             elem.push(parse_expr(stream));
-            stream.maybe(",");
+            stream.maybe(lexer::TokenClass::Comma);
         }
 
         ArrayLiteral { elem }
@@ -369,8 +372,7 @@ fn lookhead_assign(stream: &lexer::Stream) -> bool {
 
 
 fn parse_statement(stream: Streaming) -> Option<Node> {
-    let Some(ref token_ref) = stream.peek() else { return None };
-    let token = token_ref.clone();
+    let Some(ref token) = stream.peek() else { return None };
 
     Some(match token.data {
         lexer::TokenClass::Keyword(ref x) if x == "if"      => Box::new(IfStat::parse(stream)) as Node,
