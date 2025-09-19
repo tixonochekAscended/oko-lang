@@ -121,10 +121,10 @@ impl Stream {
         token
     }
 
-    pub fn peek(&mut self) -> Option<&Token> {
+    pub fn peek(&self) -> Option<&Token> {
         if !self.has() { return None }
         
-        return Some(self.get(self.index));
+        return Some(&self.tokens[self.index]);
     }
 
     pub fn next(&mut self) {
