@@ -67,10 +67,44 @@ pub enum TokenClass {
 
 #[derive(Debug)]
 pub struct Token {
-    data: TokenClass,
-    line_index: u32,
+    pub data: TokenClass,
+    pub line_index: u32,
 }
-type Stream = Vec<Token>;
+
+#[derive(Debug)]
+pub struct Stream {
+    tokens: Vec<Token>,
+    index: usize,
+}
+
+impl Stream {
+    fn push (&mut self, token: Token) {
+        self.tokens.push(token);
+    }
+    pub fn has(&self) -> bool {
+        return self.index < self.tokens.len();
+    }
+
+    pub fn peek(&self) -> Option<&Token> {
+        if !self.has() { return None }
+        
+        return Some(&self.tokens[self.index]);
+    }
+
+    pub fn next(&mut self) {
+        self.index += 1;
+    }
+
+    pub fn pop(&mut self) -> Option<&Token> {
+        if !self.has() { return None }
+
+        let i = self.index;
+        self.next();
+        return Some(&self.tokens[i]);
+    }
+
+}
+
 
 
 
@@ -149,7 +183,7 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
 }
 
 pub fn lex(source: &String) -> Stream {
-    let mut out: Stream  = vec![];
+    let mut out = Stream { tokens: vec![], index: 0 };
 
     let mut buffer: String = Default::default();
     let mut last  = CharType::Invalid;
