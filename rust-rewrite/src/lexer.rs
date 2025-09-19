@@ -154,6 +154,18 @@ impl Stream {
         std::process::exit(1);
     }
 
+    pub fn maybe(&mut self, can: TokenClass) {
+        let Some(token) = self.peek() else { return; };
+        let got = token.data.clone();
+        if can == got { self.next(); }
+    }
+
+    pub fn lookhead(&self, offset: usize) -> Option<&Token> {
+        let at: usize = self.index + offset;
+        if at >= self.tokens.len() { return None }
+        
+        return Some(&self.tokens[at]);
+    }
 
 }
 
