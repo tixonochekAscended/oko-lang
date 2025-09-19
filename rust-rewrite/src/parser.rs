@@ -1,4 +1,6 @@
 
+use core::fmt;
+
 use crate::lexer::{self, Stream};
 type Streaming<'a> = &'a mut lexer::Stream;
 
@@ -30,28 +32,28 @@ fn get_op_precedence(op: &str) -> u32 {
 
 
 
-pub trait Nodeable {
+pub trait Nodeable: fmt::Debug {
 }
 type Node = Box<dyn Nodeable>;
 
-struct StatSeq          { nodes: Vec<Node> } //program is just sequence of statements
-struct ImportStat       { mod_name: String }
-struct VariableAssign   { var_name: String, op: String, expr: Node }
-struct BinaryExpr       { op: String, left: Node, right: Node }
-struct UnaryExpr        { op: String, operand: Node }
-struct IntLiteral       { value: u64 }
-struct FloatLiteral     { value: f64 }
-struct StrLiteral       { value: String }
-struct Variable         { name:  String } 
-struct FunctionCall     { name: String, args: Vec<Node> }
-struct ModAccess        { mod_name: String, member: String }
-struct ArrayLiteral     { elem: Vec<Node> }
-struct ReturnStat       { expr: Option<Node> }
-struct FunctionDeclare  { name: String, args: Vec<String>, body: StatSeq }
-struct ExprStat         { expr: Node }
-struct IfStat           { condition: Node, if_block: StatSeq, else_block: Option<Node> }
-struct WhileStat        { condition: Node, body: StatSeq }
-struct ForStat          { elem_name: String, array: Node, body: StatSeq }
+#[derive(Debug)] pub struct StatSeq          { nodes: Vec<Node> } //program is just sequence of statements
+#[derive(Debug)] pub struct ImportStat       { mod_name: String }
+#[derive(Debug)] pub struct VariableAssign   { var_name: String, op: String, expr: Node }
+#[derive(Debug)] pub struct BinaryExpr       { op: String, left: Node, right: Node }
+#[derive(Debug)] pub struct UnaryExpr        { op: String, operand: Node }
+#[derive(Debug)] pub struct IntLiteral       { value: u64 }
+#[derive(Debug)] pub struct FloatLiteral     { value: f64 }
+#[derive(Debug)] pub struct StrLiteral       { value: String }
+#[derive(Debug)] pub struct Variable         { name:  String } 
+#[derive(Debug)] pub struct FunctionCall     { name: String, args: Vec<Node> }
+#[derive(Debug)] pub struct ModAccess        { mod_name: String, member: String }
+#[derive(Debug)] pub struct ArrayLiteral     { elem: Vec<Node> }
+#[derive(Debug)] pub struct ReturnStat       { expr: Option<Node> }
+#[derive(Debug)] pub struct FunctionDeclare  { name: String, args: Vec<String>, body: StatSeq }
+#[derive(Debug)] pub struct ExprStat         { expr: Node }
+#[derive(Debug)] pub struct IfStat           { condition: Node, if_block: StatSeq, else_block: Option<Node> }
+#[derive(Debug)] pub struct WhileStat        { condition: Node, body: StatSeq }
+#[derive(Debug)] pub struct ForStat          { elem_name: String, array: Node, body: StatSeq }
 
 
 fn parse_block(stream: Streaming) -> StatSeq {
@@ -400,7 +402,7 @@ fn parse_statement(stream: Streaming) -> Option<Node> {
 
 
 impl StatSeq {
-    fn parse(stream: Streaming) -> Self {
+    pub fn parse(stream: Streaming) -> Self {
         let mut nodes: Vec<Node> = vec![];
 
         loop {
