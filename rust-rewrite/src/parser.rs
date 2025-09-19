@@ -291,6 +291,8 @@ impl ModAccess {
         let lexer::TokenClass::Identifier(ref mod_ref) = mod_token.data else { stream.error("Expected module identifier."); };
         let mod_name = mod_ref.clone();
 
+        stream.maybe(lexer::TokenClass::Namespace);
+
         let Some(member_token) = stream.pop() else { stream.error("End of token stream while parsing module access."); };
         let lexer::TokenClass::Identifier(ref member_ref) = member_token.data else { stream.error("Expected member name."); };
         let member = member_ref.clone();
