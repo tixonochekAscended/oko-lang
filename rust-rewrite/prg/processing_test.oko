@@ -1,3 +1,5 @@
+import io;
+import tu;
 
 io::println("Hello, World!");
 
@@ -13,8 +15,6 @@ var = 13;
 msg := "Hello, World!";
 msg = -0.13; // can't change the variable's type via `=` from String to Number
 
-import io;
-import tu;
 
 if ("") {
   io::println("Steak");
@@ -28,7 +28,6 @@ if ("") {
   io::println("Princess");
 }
 
-import io;
 
 j := 1;
 while (j <= 5) {
@@ -41,7 +40,6 @@ for (el) (items) {
   io::println(el);
 }
 
-import io;
 
 fun sum(a, b) {
   return a + b;
@@ -51,8 +49,9 @@ fun thisReturnsNil(msg) {
   io::println(msg);
 }
 
-
-import io;
+result := (sum(10, 20));
+thisReturnsNil(result);
+thisReturnsNil(sum(20, 20));
 
 fun outer(a, b) {
   fun inner(c) {
