@@ -194,6 +194,7 @@ enum CharType {
 fn get_char_state(char: char) -> CharType {
     return match char {
         x if x.is_alphabetic() => CharType::Alpha,
+        '_' => CharType::Alpha,
         x if x.is_numeric() => CharType::Num,
         '.' => CharType::Num,
         '"' => CharType::Quote,
