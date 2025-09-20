@@ -11,7 +11,7 @@ var = 13;
 // this is a comment
 
 msg := "Hello, World!";
-msg = -0.13 // can't change the variable's type via `=` from String to Number
+msg = -0.13; // can't change the variable's type via `=` from String to Number
 
 import io;
 import tu;
