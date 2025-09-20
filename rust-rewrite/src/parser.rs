@@ -2,6 +2,7 @@
 use core::fmt;
 
 use crate::lexer::{self, Stream};
+use crate::executor;
 type Streaming<'a> = &'a mut lexer::Stream;
 
 const UNARY_OPS: [&str; 2] = ["!", "-"];
@@ -33,27 +34,28 @@ fn get_op_precedence(op: &str) -> u32 {
 
 
 pub trait Nodeable: fmt::Debug {
+    fn eval(&self, scope: &mut executor::Scope) -> executor::Obj;
 }
-type Node = Box<dyn Nodeable>;
+pub type Node = Box<dyn Nodeable>;
 
-#[derive(Debug)] pub struct StatSeq          { nodes: Vec<Node> } //program is just sequence of statements
-#[derive(Debug)] pub struct ImportStat       { mod_name: String }
-#[derive(Debug)] pub struct VariableAssign   { var_name: String, op: lexer::TokenClass, expr: Node }
-#[derive(Debug)] pub struct BinaryExpr       { op: String, left: Node, right: Node }
-#[derive(Debug)] pub struct UnaryExpr        { op: String, operand: Node }
-#[derive(Debug)] pub struct IntLiteral       { value: u64 }
-#[derive(Debug)] pub struct FloatLiteral     { value: f64 }
-#[derive(Debug)] pub struct StrLiteral       { value: String }
-#[derive(Debug)] pub struct Variable         { name:  String } 
-#[derive(Debug)] pub struct FunctionCall     { name: String, args: Vec<Node> }
-#[derive(Debug)] pub struct ModAccess        { mod_name: String, member: Node }
-#[derive(Debug)] pub struct ArrayLiteral     { elem: Vec<Node> }
-#[derive(Debug)] pub struct ReturnStat       { expr: Option<Node> }
-#[derive(Debug)] pub struct FunctionDeclare  { name: String, args: Vec<String>, body: StatSeq }
-#[derive(Debug)] pub struct ExprStat         { expr: Node }
-#[derive(Debug)] pub struct IfStat           { condition: Node, if_block: StatSeq, else_block: Option<Node> }
-#[derive(Debug)] pub struct WhileStat        { condition: Node, body: StatSeq }
-#[derive(Debug)] pub struct ForStat          { elem_name: String, array: Node, body: StatSeq }
+#[derive(Debug)] pub struct StatSeq          { pub nodes: Vec<Node> } //program is just sequence of statements
+#[derive(Debug)] pub struct ImportStat       { pub mod_name: String }
+#[derive(Debug)] pub struct VariableAssign   { pub var_name: String, pub op: lexer::TokenClass, pub expr: Node }
+#[derive(Debug)] pub struct BinaryExpr       { pub op: String, pub left: Node, pub right: Node }
+#[derive(Debug)] pub struct UnaryExpr        { pub op: String, pub operand: Node }
+#[derive(Debug)] pub struct IntLiteral       { pub value: u64 }
+#[derive(Debug)] pub struct FloatLiteral     { pub value: f64 }
+#[derive(Debug)] pub struct StrLiteral       { pub value: String }
+#[derive(Debug)] pub struct Variable         { pub name:  String } 
+#[derive(Debug)] pub struct FunctionCall     { pub name: String, pub args: Vec<Node> }
+#[derive(Debug)] pub struct ModAccess        { pub mod_name: String, pub member: FunctionCall }
+#[derive(Debug)] pub struct ArrayLiteral     { pub elem: Vec<Node> }
+#[derive(Debug)] pub struct ReturnStat       { pub expr: Option<Node> }
+#[derive(Debug)] pub struct FunctionDeclare  { pub name: String, pub args: Vec<String>, pub body: StatSeq }
+#[derive(Debug)] pub struct ExprStat         { pub expr: Node }
+#[derive(Debug)] pub struct IfStat           { pub condition: Node, pub if_block: StatSeq, pub else_block: Option<Node> }
+#[derive(Debug)] pub struct WhileStat        { pub condition: Node, pub body: StatSeq }
+#[derive(Debug)] pub struct ForStat          { pub elem_name: String, pub array: Node, pub body: StatSeq }
 
 
 fn parse_block(stream: Streaming) -> StatSeq {
@@ -70,7 +72,6 @@ fn parse_condition(stream: Streaming) -> Node {
     return expr;
 }
 
-impl Nodeable for StatSeq {}
 
 
 impl IfStat {
@@ -95,11 +96,6 @@ impl IfStat {
     }
 }
 
-impl Nodeable for IfStat {}
-impl Nodeable for UnaryExpr {}
-impl Nodeable for BinaryExpr {}
-impl Nodeable for WhileStat {}
-impl Nodeable for ForStat {}
 
 
 fn lookhead_fn_call(stream: &Stream) -> bool {
@@ -115,15 +111,6 @@ fn lookhead_mod(stream: &Stream) -> bool {
         _ => false,
     }
 }
-
-
-impl Nodeable for ArrayLiteral {}
-impl Nodeable for IntLiteral {}
-impl Nodeable for StrLiteral {}
-impl Nodeable for FloatLiteral {}
-impl Nodeable for FunctionCall {}
-impl Nodeable for ModAccess {}
-impl Nodeable for Variable {}
 
 
 
@@ -297,11 +284,7 @@ impl ModAccess {
 
         let member = FunctionCall::parse(stream);
 
-        //let Some(member_token) = stream.pop() else { stream.error("End of token stream while parsing module access."); };
-        //let lexer::TokenClass::Identifier(ref member_ref) = member_token.data else { stream.error("Expected member name."); };
-        //let member = member_ref.clone();
-
-        ModAccess { mod_name, member: Box::new(member) as Node }
+        ModAccess { mod_name, member }
 
     }
 }
@@ -369,12 +352,6 @@ impl ExprStat {
         ExprStat { expr }
     }
 }
-
-impl Nodeable for FunctionDeclare {}
-impl Nodeable for ReturnStat {}
-impl Nodeable for ImportStat {}
-impl Nodeable for VariableAssign {}
-impl Nodeable for ExprStat {}
 
 
 fn lookhead_assign(stream: &lexer::Stream) -> bool {
