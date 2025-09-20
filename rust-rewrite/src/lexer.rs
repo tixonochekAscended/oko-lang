@@ -3,13 +3,15 @@ use core::fmt;
 
 
 
-const KEYWORDS: [&str; 6] = [
+const KEYWORDS: [&str; 8] = [
     "fun",
     "while",
     "if",
+    "elif",
     "else",
     "import",
     "for",
+    "return",
 ];
 
 const OPERATORS: [&str; 14] = [
@@ -122,16 +124,21 @@ impl Stream {
     }
 
     pub fn peek(&self) -> Option<&Token> {
+        dbg!("PEEK");
+        dbg!(&self.tokens[self.index]);
         if !self.has() { return None }
         
         return Some(&self.tokens[self.index]);
     }
 
     pub fn next(&mut self) {
+        dbg!("NEXT");
         self.index += 1;
     }
 
     pub fn pop(&mut self) -> Option<&Token> {
+        dbg!("POP");
+        dbg!(&self.tokens[self.index]);
         if !self.has() { return None }
 
         let i = self.index;
@@ -140,6 +147,8 @@ impl Stream {
     }
 
     pub fn expect(&mut self, should: TokenClass) {
+        dbg!("EXPECT");
+        dbg!(&should);
         let Some(token) = self.pop() else { 
             self.error(format!("Expected {}, but end of token stream.", should).as_str()) 
         };
@@ -151,10 +160,13 @@ impl Stream {
 
     pub fn error(&self, msg: &str) -> ! {
         eprintln!("Error at line {}: {}", self.last_line_index, msg);
-        std::process::exit(1);
+        //std::process::exit(1);
+        panic!("EVERYBODY PANIC!!!!")
     }
 
     pub fn maybe(&mut self, can: TokenClass) {
+        dbg!("MAYBE");
+        dbg!(&can);
         let Some(token) = self.peek() else { return; };
         let got = token.data.clone();
         if can == got { self.next(); }
