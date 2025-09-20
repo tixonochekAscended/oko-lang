@@ -170,6 +170,7 @@ fn parse_expr_prec(stream: Streaming, precedence: u32) -> Node {
  
     loop {
         let Some(token) = stream.peek() else { break; };
+        dbg!(&token);
         let lexer::TokenClass::Operator(ref op_ref) = token.data else { break; };
         if precedence > get_op_precedence(op_ref.as_str()) { break; }
         let op = op_ref.clone();
