@@ -46,7 +46,7 @@ type Node = Box<dyn Nodeable>;
 #[derive(Debug)] pub struct StrLiteral       { value: String }
 #[derive(Debug)] pub struct Variable         { name:  String } 
 #[derive(Debug)] pub struct FunctionCall     { name: String, args: Vec<Node> }
-#[derive(Debug)] pub struct ModAccess        { mod_name: String, member: String }
+#[derive(Debug)] pub struct ModAccess        { mod_name: String, member: Node }
 #[derive(Debug)] pub struct ArrayLiteral     { elem: Vec<Node> }
 #[derive(Debug)] pub struct ReturnStat       { expr: Option<Node> }
 #[derive(Debug)] pub struct FunctionDeclare  { name: String, args: Vec<String>, body: StatSeq }
@@ -132,18 +132,18 @@ fn parse_primary_expr(stream: Streaming) -> Node {
     let Some(token) = stream.peek() else { stream.error("End of token stream while parsing primary expression."); };
     
     match token.data.clone() {
-        lexer::TokenClass::BracketOpen  => Box::new(ArrayLiteral::parse(stream)) as Node,
         lexer::TokenClass::Operator(ref op) if UNARY_OPS.contains(&op.as_str()) => {
             stream.next();
             let operand = parse_expr_prec(stream, 9);
             Box::new(UnaryExpr { operand, op: op.clone() }) as Node
         },
-        lexer::TokenClass::Integer(x)     => Box::new(IntLiteral   { value: x }) as Node,
-        lexer::TokenClass::Float(x)       => Box::new(FloatLiteral { value: x }) as Node,
-        lexer::TokenClass::String(ref x)  => Box::new(StrLiteral   { value: x.clone() }) as Node,
-        lexer::TokenClass::Identifier(_) if lookhead_fn_call(stream) => Box::new(FunctionCall::parse(stream)) as Node,
-        lexer::TokenClass::Identifier(_) if lookhead_mod(stream)     => Box::new(ModAccess::parse(stream)) as Node,
-        lexer::TokenClass::Identifier(ref x) => Box::new(Variable  { name: x.clone() }) as Node,
+        lexer::TokenClass::BracketOpen                               => { let out = Box::new(ArrayLiteral::parse(stream))       as Node; stream.next(); out },
+        lexer::TokenClass::Integer(x)                                => { let out = Box::new(IntLiteral   { value: x         }) as Node; stream.next(); out },
+        lexer::TokenClass::Float(x)                                  => { let out = Box::new(FloatLiteral { value: x         }) as Node; stream.next(); out },
+        lexer::TokenClass::String(ref x)                             => { let out = Box::new(StrLiteral   { value: x.clone() }) as Node; stream.next(); out },
+        lexer::TokenClass::Identifier(_) if lookhead_fn_call(stream) => { let out = Box::new(FunctionCall::parse(stream))       as Node; stream.next(); out },
+        lexer::TokenClass::Identifier(_) if lookhead_mod(stream)     => { let out = Box::new(ModAccess::parse(stream))          as Node; stream.next(); out },
+        lexer::TokenClass::Identifier(ref x)                         => { let out = Box::new(Variable     { name: x.clone()  }) as Node; stream.next(); out },
         lexer::TokenClass::ParenOpen     => {
             stream.next();
             let expr = parse_expr(stream);
@@ -264,7 +264,8 @@ fn parse_call_args(stream: Streaming) -> Vec<Node> {
     let mut out: Vec<Node> = vec![];
     stream.expect(lexer::TokenClass::ParenOpen);
 
-    while let Some(_) = stream.peek() {
+    while let Some(x) = stream.peek() {
+        if lexer::TokenClass::ParenClose == x.data { break; };
         out.push(parse_expr(stream));
         stream.maybe(lexer::TokenClass::Comma);
     }
@@ -293,11 +294,13 @@ impl ModAccess {
 
         stream.maybe(lexer::TokenClass::Namespace);
 
-        let Some(member_token) = stream.pop() else { stream.error("End of token stream while parsing module access."); };
-        let lexer::TokenClass::Identifier(ref member_ref) = member_token.data else { stream.error("Expected member name."); };
-        let member = member_ref.clone();
+        let member = FunctionCall::parse(stream);
 
-        ModAccess { mod_name, member }
+        //let Some(member_token) = stream.pop() else { stream.error("End of token stream while parsing module access."); };
+        //let lexer::TokenClass::Identifier(ref member_ref) = member_token.data else { stream.error("Expected member name."); };
+        //let member = member_ref.clone();
+
+        ModAccess { mod_name, member: Box::new(member) as Node }
 
     }
 }
