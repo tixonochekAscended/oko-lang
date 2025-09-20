@@ -76,11 +76,8 @@ impl Nodeable for StatSeq {}
 impl IfStat {
     fn parse(stream: Streaming) -> Self {
         stream.maybe(lexer::TokenClass::Keyword("if".to_string()));
-        dbg!("IFSTAT COND PARSE START");
         let condition: Node  = parse_condition(stream);
-        dbg!("IFSTAT BLOCK PARSE START");
         let if_block: StatSeq = parse_block(stream);
-        dbg!("IFSTAT ELSE PARSE START");
 
         let else_block = match stream.peek() {
             None => None,
@@ -93,8 +90,6 @@ impl IfStat {
                     _ => None,
             }},
         };
-
-        dbg!("IFSTAT DONE!!!! PARSE ");
 
         IfStat { condition, if_block, else_block }
     }
@@ -170,7 +165,6 @@ fn parse_expr_prec(stream: Streaming, precedence: u32) -> Node {
  
     loop {
         let Some(token) = stream.peek() else { break; };
-        dbg!(&token);
         let lexer::TokenClass::Operator(ref op_ref) = token.data else { break; };
         if precedence > get_op_precedence(op_ref.as_str()) { break; }
         let op = op_ref.clone();
@@ -240,8 +234,6 @@ impl ReturnStat {
     fn parse(stream: Streaming) -> Self {
         stream.maybe(lexer::TokenClass::Keyword("return".to_string()));
         let Some(token) = stream.peek() else { stream.error("End of token stream while parsing return statement."); };
-
-        dbg!("RETURNSTAT EXPR PARSE START");
 
         let expr: Option<Node> = match token.data {
             lexer::TokenClass::EndOfStatement => None,
@@ -386,7 +378,6 @@ impl Nodeable for ExprStat {}
 
 
 fn lookhead_assign(stream: &lexer::Stream) -> bool {
-    dbg!(stream.peek());
     match stream.lookhead(1) {
         Some(lexer::TokenClass::AssignOp(_)) => true,
         Some(lexer::TokenClass::Assign)      => true,
@@ -398,8 +389,6 @@ fn lookhead_assign(stream: &lexer::Stream) -> bool {
 
 fn parse_statement(stream: Streaming) -> Option<Node> {
     let Some(ref token) = stream.peek() else { return None };
-
-    dbg!(token);
 
     Some(match token.data {
         lexer::TokenClass::Keyword(ref x) if x == "if"      => Box::new(IfStat::parse(stream)) as Node,
