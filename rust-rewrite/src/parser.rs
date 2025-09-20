@@ -173,6 +173,7 @@ fn parse_expr_prec(stream: Streaming, precedence: u32) -> Node {
         let lexer::TokenClass::Operator(ref op_ref) = token.data else { break; };
         if precedence > get_op_precedence(op_ref.as_str()) { break; }
         let op = op_ref.clone();
+        stream.next();
 
         let right = parse_expr_prec(stream, get_op_precedence(op.as_str()));
 
@@ -237,11 +238,13 @@ impl ForStat {
 impl ReturnStat {
     fn parse(stream: Streaming) -> Self {
         stream.maybe(lexer::TokenClass::Keyword("return".to_string()));
-        let Some(token) = stream.pop() else { stream.error("End of token stream while parsing return statement."); };
+        let Some(token) = stream.peek() else { stream.error("End of token stream while parsing return statement."); };
+
+        dbg!("RETURNSTAT EXPR PARSE START");
 
         let expr: Option<Node> = match token.data {
-            lexer::TokenClass::EndOfStatement => Some(parse_expr(stream)),
-            _ => None,
+            lexer::TokenClass::EndOfStatement => None,
+            _ => Some(parse_expr(stream)),
         };
 
         stream.expect(lexer::TokenClass::EndOfStatement);
