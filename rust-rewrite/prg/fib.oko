@@ -1,0 +1,41 @@
+
+//recursive fibonacci
+fun fib_rec(n) {
+    if (n < 2) { return 1; }
+    return fib_rec(n - 1) + fib_rec(n - 2);
+}
+
+//iterative fibonacci
+fun fib_iter(n) {
+    i := 1;
+
+    a := 1;
+    b := 1;
+
+
+    while (i < n) {
+        c := a + b;
+        a = b;
+        b = c;
+
+        i += 1;
+    }
+
+    return a;
+}
+
+
+
+io::println("fib_rec(6) = ");
+io::println(fib_rec(6));
+io::println("fib_iter(13) = ");
+io::println(fib_iter(13));
+
+
+
+
+
+
+
+
+
