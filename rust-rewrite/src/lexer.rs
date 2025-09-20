@@ -125,8 +125,8 @@ impl Stream {
 
     pub fn peek(&self) -> Option<&Token> {
         dbg!("PEEK");
-        dbg!(&self.tokens[self.index]);
         if !self.has() { return None }
+        dbg!(&self.tokens[self.index]);
         
         return Some(&self.tokens[self.index]);
     }
@@ -258,6 +258,18 @@ fn push_token(out: &mut Stream, state: &CharType, buffer: &String, line_index: u
 
 }
 
+fn should_always_transition(state: &CharType) -> bool {
+    match state {
+        CharType::ParenOpen | CharType::ParenClose |
+        CharType::CurlyOpen | CharType::CurlyClose |
+        CharType::BracketOpen | CharType::BracketClose
+          => true,
+        _ => false
+    }
+}
+
+
+
 pub fn lex(source: &String) -> Stream {
     let mut out = Stream { tokens: vec![], index: 0, last_line_index: 0};
 
@@ -276,7 +288,9 @@ pub fn lex(source: &String) -> Stream {
         if buffer == "//" { in_comment = true; buffer.clear() }
         if last == CharType::Quote { in_string = !in_string; }
 
-        if state != last && !in_comment && !in_string {
+        //"transite" = (Lat.) "go over!" (imperative of "transire", "to transition")
+        let transite = (state != last) || should_always_transition(&last);
+        if transite && !in_comment && !in_string {
             push_token(&mut out, &last, &buffer, line_index);
             buffer.clear();
         }
