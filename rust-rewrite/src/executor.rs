@@ -5,16 +5,17 @@ use std::rc::Rc;
 use crate::{lexer, parser};
 
 
-struct Fun<'a> {
-    args: &'a Vec<String>,
-    body: &'a parser::StatSeq,
+#[derive(Clone)]
+struct Fun {
+    args: Vec<String>,
+    body: Rc<parser::StatSeq>,
 }
 
 
 #[derive(Clone)]
-pub struct Scope<'a> {
+pub struct Scope {
     vars: HashMap<String, Obj>,
-    funs: HashMap<String, Rc<Fun<'a>>>,
+    funs: HashMap<String, Fun>,
     ret_val: Obj,
     ret_flag: bool,
 }
@@ -248,21 +249,31 @@ impl parser::Nodeable for parser::Variable {
 
 impl parser::Nodeable for parser::FunctionCall {
     fn eval(&self, scope: &mut Scope) -> Obj {
-        //explicit clone to enable scope teardown
+
+        //pre-evaluate argument expressions
+        let mut arg_vals: Vec<Obj> = vec![];
+        for arg in &self.args {
+            arg_vals.push(arg.eval(scope));
+        }
 
         let funs = &scope.funs;
         let Some(fun) = funs.get(&self.name) else {
             error(format!("Function of name {} is not declared in scope.", self.name));
         };
 
-        let mut inner_scope = Scope {
-            vars: scope.vars.clone(),
-            funs: scope.funs.clone(),
-            ret_flag: false,
-            ret_val: Obj::Invalid
-        };
+        //explicit clone to enable scope teardown
+        let mut inner_scope = scope.clone();
 
-        fun.eval(&mut inner_scope);
+        //shouldn't be set anyways
+        inner_scope.ret_val = Obj::Invalid;
+        inner_scope.ret_flag = false; 
+
+        //inject args
+        for (arg_val, arg_name) in std::iter::zip(arg_vals, &fun.args) {
+            inner_scope.vars.insert(arg_name.clone(), arg_val);
+        }
+
+        fun.body.eval(&mut inner_scope);
 
         inner_scope.ret_val
     }
@@ -297,11 +308,11 @@ impl parser::Nodeable for parser::ReturnStat {
 }
 
 impl parser::Nodeable for parser::FunctionDeclare {
-    fn eval<'a, 'b: 'a>(&self, scope: &'a mut self::Scope) -> self::Obj {
-        scope.funs.insert(self.name.clone(), Rc::new(Fun {
-            args: &self.args,
-            body: &self.body,
-        }));
+    fn eval(&self, scope: &mut self::Scope) -> self::Obj {
+        scope.funs.insert(self.name.clone(), Fun {
+            args: self.args.clone(),
+            body: self.body.clone(),
+        });
 
         Obj::Invalid
     }
