@@ -1,12 +1,13 @@
 
 
-use std::collections::HashMap;
+use std::fmt::{Display, Pointer};
+use std::{collections::HashMap, fmt::Debug};
 use std::rc::Rc;
-use crate::{lexer, parser::{self, Nodeable}};
+use crate::{lexer, parser};
 
 
 #[derive(Clone)]
-struct Fun {
+pub struct Fun {
     args: Vec<String>,
     body: Rc<parser::StatSeq>,
 }
@@ -14,13 +15,13 @@ struct Fun {
 
 #[derive(Clone)]
 pub struct Scope {
-    vars: HashMap<String, Obj>,
-    funs: HashMap<String, Fun>,
-    ret_val: Obj,
-    ret_flag: bool,
+    pub vars: HashMap<String, Obj>,
+    pub funs: HashMap<String, Fun>,
+    pub ret_val: Obj,
+    pub ret_flag: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Obj {
     Invalid,
     Int(i64),
@@ -29,6 +30,28 @@ pub enum Obj {
     Array(Vec<Obj>),
     Bool(bool),
     Nil,
+}
+
+impl std::fmt::Display for Obj {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Obj::Invalid    => error("Cannot render invalid object.".to_string()),
+            Obj::Nil        => write!(f, "Nil"),
+            Obj::Int(x)     => write!(f, "{}", x),
+            Obj::Float(x)   => write!(f, "{}", x),
+            Obj::String(x)  => write!(f, "{}", x),
+            Obj::Bool(x)    => write!(f, "{}", x),
+            Obj::Array(x)   => {
+                write!(f, "[")?;
+                for elem in x {
+                    elem.fmt(f)?;
+                    write!(f, ", ")?;
+                }
+                write!(f, "]")?;
+                Ok(())
+            }
+        }
+    }
 }
 
 
@@ -281,7 +304,11 @@ impl parser::Nodeable for parser::FunctionCall {
 
 impl parser::Nodeable for parser::ModAccess {
     fn eval(&self, scope: &mut Scope) -> Obj {
-        todo!();
+        match (self.mod_name.as_str(), self.member.name.as_str()) {
+            ("io", "println") => println!("dbg out: {}", self.member.args[0].eval(scope)),
+            _ => todo!(),
+        };
+        Obj::Invalid
     }
 }
 
