@@ -1,7 +1,6 @@
 
 
-use std::fmt::{Display, Pointer};
-use std::{collections::HashMap, fmt::Debug};
+use std::collections::HashMap;
 use std::rc::Rc;
 use crate::{lexer, parser};
 
@@ -173,7 +172,8 @@ impl parser::Nodeable for parser::StatSeq {
 }
 
 impl parser::Nodeable for parser::ImportStat {
-    fn eval(&self, _: &mut Scope) -> Obj {
+    fn eval(&self, _scope: &mut Scope) -> Obj {
+        let _ = self.mod_name;
         //built-in's are compiled into execute,
         //so "importing" doesn't have semantic meaning.
         //there is not to "load" into memory.
