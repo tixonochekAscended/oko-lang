@@ -1,5 +1,6 @@
 
 use core::fmt;
+use std::rc::Rc;
 
 use crate::lexer::{self, Stream};
 use crate::executor;
@@ -33,10 +34,14 @@ fn get_op_precedence(op: &str) -> u32 {
 
 
 
+
 pub trait Nodeable: fmt::Debug {
     fn eval(&self, scope: &mut executor::Scope) -> executor::Obj;
 }
+
 pub type Node = Box<dyn Nodeable>;
+
+
 
 #[derive(Debug)] pub struct StatSeq          { pub nodes: Vec<Node> } //program is just sequence of statements
 #[derive(Debug)] pub struct ImportStat       { pub mod_name: String }
@@ -51,7 +56,7 @@ pub type Node = Box<dyn Nodeable>;
 #[derive(Debug)] pub struct ModAccess        { pub mod_name: String, pub member: FunctionCall }
 #[derive(Debug)] pub struct ArrayLiteral     { pub elem: Vec<Node> }
 #[derive(Debug)] pub struct ReturnStat       { pub expr: Option<Node> }
-#[derive(Debug)] pub struct FunctionDeclare  { pub name: String, pub args: Vec<String>, pub body: StatSeq }
+#[derive(Debug)] pub struct FunctionDeclare  { pub name: String, pub args: Vec<String>, pub body: Rc<StatSeq> }
 #[derive(Debug)] pub struct ExprStat         { pub expr: Node }
 #[derive(Debug)] pub struct IfStat           { pub condition: Node, pub if_block: StatSeq, pub else_block: Option<Node> }
 #[derive(Debug)] pub struct WhileStat        { pub condition: Node, pub body: StatSeq }
@@ -243,7 +248,7 @@ impl FunctionDeclare {
         let args = parse_func_args(stream);
         let body = parse_block(stream);
 
-        FunctionDeclare { name, args, body }
+        FunctionDeclare { name, args, body: Rc::new(body) }
     }
 }
 
