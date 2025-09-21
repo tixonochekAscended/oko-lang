@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::rc::Rc;
-use crate::{lexer, parser};
+use crate::{lexer, parser::{self, Nodeable}};
 
 
 #[derive(Clone)]
@@ -308,7 +308,7 @@ impl parser::Nodeable for parser::ReturnStat {
 }
 
 impl parser::Nodeable for parser::FunctionDeclare {
-    fn eval(&self, scope: &mut self::Scope) -> self::Obj {
+    fn eval(&self, scope: &mut self::Scope) -> Obj {
         scope.funs.insert(self.name.clone(), Fun {
             args: self.args.clone(),
             body: self.body.clone(),
@@ -317,5 +317,56 @@ impl parser::Nodeable for parser::FunctionDeclare {
         Obj::Invalid
     }
 }
+
+
+impl parser::Nodeable for parser::ExprStat {
+    fn eval(&self, scope: &mut self::Scope) -> Obj {
+        self.expr.eval(scope);
+        Obj::Invalid
+    }
+}
+
+impl parser::Nodeable for parser::IfStat {
+    fn eval(&self, scope: &mut self::Scope) -> Obj {
+        let cond_val = self.condition.eval(scope);
+
+        if truthiness(cond_val) {
+            self.if_block.eval(scope)
+        } else if let Some(else_block) = &self.else_block {
+            else_block.eval(scope)
+        } else {
+            Obj::Invalid
+        }
+    }
+}
+
+impl parser::Nodeable for parser::WhileStat {
+    fn eval(&self, scope: &mut self::Scope) -> Obj {
+        while truthiness(self.condition.eval(scope)) {
+            self.body.eval(scope);
+        }
+        
+        Obj::Invalid
+    }
+}
+
+impl parser::Nodeable for parser::ForStat {
+    fn eval(&self, scope: &mut self::Scope) -> self::Obj {
+        let Obj::Array(arr) = self.array.eval(scope) else {
+            error("Unable to iterate non-array type.".to_string());
+        };
+
+        for elem in arr {
+            let mut inner_scope = scope.clone();
+            inner_scope.vars.insert(self.elem_name.clone(), elem);
+
+            self.body.eval(&mut inner_scope);
+        }
+
+        Obj::Invalid
+    }
+}
+
+
 
 
