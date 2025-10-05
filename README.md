@@ -198,3 +198,6 @@ The name `oko-lang` (or rather `oko`) was chosen for no specific reason by me, t
 
 ## 🧑‍⚖️ License
 **oko-lang** uses the **GNU General Public License version 3**. For more information, check the `LICENSE` file of this repository or use the `oko license` command (the first method is preffered).
+
+## ❤️ Credits
+All credit for the **Rust rewrite of oko-lang** goes to **[S1monr3dst0ne07](https://github.com/S1monr3dst0ne07)**
