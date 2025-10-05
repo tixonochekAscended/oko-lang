@@ -6,7 +6,7 @@
 # oko-lang – A programming language
 **oko-lang** (or simply **oko**) is an interpreted, non-esoteric programming language the official implementation of which is powered by the Deno JS runtime. Features most of the things that you can find in other languages - variables, complex data structures, functions, program flow control, loops, rich standart library (built-ins) and more.
 
-*P.S. - As of September, 2025 there is a new __unofficial__ implementation of oko-lang which is written in Rust. As of October, 2025 this version is yet to be reviewed by the main developer of oko, tixonochekAscended.*
+🦀 *P.S. - As of September, 2025 there is a new __unofficial__ implementation of oko-lang which is written in Rust. As of October, 2025 this version is yet to be reviewed by the main developer of oko, tixonochekAscended.*
 
 ## ⚠️ Warning (& Contribution)
 At the moment, oko-lang is in its early stage of development. Expect ground-breaking changes, no backward compatability, significant performance and development experience improvements and much more. If you would like to contribute to the language by any means, [we have a discord server.](https://discord.gg/NSK7YJ2R6j) There you can contact me - the main developer - and other people who are willing to help us build **oko**.
